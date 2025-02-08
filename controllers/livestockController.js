@@ -339,13 +339,12 @@ const getHeatmapData = async (req, res) => {
 const handleUpdateLivestock = async (req, res) => {
   try {
     const { id, category, livestock, count } = req.body;
+
     if (!id || !category || !livestock || !count)
       return res.status(400).json({ message: `Bad request` });
 
     if (isNaN(count) || count <= 0)
-      return res
-        .status(400)
-        .json({ message: "Count must be a valid positive number" });
+      return res.status(400).json({ message: "Count must be a valid positive number" });
 
     const foundUser = await Farmer.findOne({
       _id: id,
@@ -355,58 +354,59 @@ const handleUpdateLivestock = async (req, res) => {
     });
 
     if (!foundUser)
-      return res.status(404).json({ message: `User with ${id} ID not found` });
+      return res.status(404).json({ message: `User with ID ${id} not found` });
 
-    const field = category === "Add Livestock" ? "livestock" : "mortality";
-    const specificLivestock = livestock?.toLowerCase();
+    const specificLivestock = livestock.toLowerCase();
 
-    const recordData = {
-      farmerID: foundUser._id,
-      barangay: foundUser.barangay,
-      createdAt: new Date(),
-      [field]: {
-        [specificLivestock]: parseInt(count),
-      },
-    };
+    // Ensure livestock type exists in the schema
+    if (!(specificLivestock in foundUser.livestock))
+      return res.status(400).json({ message: `Invalid livestock type: ${livestock}` });
+
+    const countInt = parseInt(count, 10);
 
     if (category === "Add Livestock") {
-			console.log("Adding livestock...");
-			foundUser.totalLivestock += parseInt(count, 10);
-			foundUser.totalFarmPopulation += parseInt(count);
-			foundUser.livestock[specificLivestock] += parseInt(count, 10);
-		} else {
-      if (foundUser.livestock[specificLivestock] != 0) {
-        console.log("Recording mortality...");
-        const newTotalLivestock =
-          foundUser.livestock[specificLivestock] - parseInt(count, 10);
-        if (newTotalLivestock >= 0) {
-          foundUser.totalMortality += parseInt(count, 10);
-          foundUser.totalLivestock = Math.max(newTotalLivestock, 0);
+      console.log("Adding livestock...");
+      foundUser.livestock[specificLivestock] += countInt;
+      foundUser.totalLivestock += countInt;
+      foundUser.totalFarmPopulation += countInt;
+    } else if (category === "Mortality") {
+      console.log("Recording mortality...");
 
-          foundUser.mortality[specificLivestock] += parseInt(count, 10);
-          foundUser.livestock[specificLivestock] = Math.max(
-            newTotalLivestock,
-            0
-          );
-        } else {
-          return res.status(400).json({
-            message: `Mortality count is too large. Current livestock count of ${livestock} is ${foundUser.livestock[specificLivestock]}`,
-          });
-        }
-      } else {
-        return res.status(400).json({ message: `${livestock} doesn't exist.` });
-      }
+      const availableLivestock = foundUser.livestock[specificLivestock];
+
+      if (availableLivestock === 0)
+        return res.status(400).json({ message: `${livestock} count is already at zero.` });
+
+      if (availableLivestock < countInt)
+        return res.status(400).json({
+          message: `Mortality count exceeds available livestock. Current ${livestock} count: ${availableLivestock}`
+        });
+
+      foundUser.livestock[specificLivestock] -= countInt;
+      foundUser.mortality[specificLivestock] += countInt;
+      foundUser.totalMortality += countInt;
+      foundUser.totalLivestock -= countInt; // Directly updating total livestock
+    } else {
+      return res.status(400).json({ message: "Invalid category" });
     }
 
     await foundUser.save();
+    await Livestock.create({
+      farmerID: foundUser._id,
+      barangay: foundUser.barangay,
+      createdAt: new Date(),
+      [category === "Add Livestock" ? "livestock" : "mortality"]: {
+        [specificLivestock]: countInt,
+      },
+    });
 
-    await Livestock.create(recordData);
     res.sendStatus(200);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 const getYearlyRecordData = async (req, res) => {
   try {
