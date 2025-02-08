@@ -141,24 +141,14 @@ const handleLogin = async (req, res) => {
   }
 
   try {
-    let foundUser;
-
-    foundUser = await Farmer.findOne({
+    // Find user only by referenceNo if email is verified
+    const foundUser = await Farmer.findOne({
       referenceNo: referenceNo,
       archive: false,
       emailVerified: true,
     });
 
     if (!foundUser) {
-      foundUser = await Farmer.findOne({
-        email: referenceNo,
-        emailVerified: true,
-      });
-    }
-    if (!foundUser) {
-      return res.status(401).json({ message: "Unauthorized: User not found" });
-    }
-    if (!foundUser.emailVerified) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
 
@@ -190,9 +180,8 @@ const handleLogin = async (req, res) => {
     foundUser.refreshToken = refreshToken;
     await foundUser.save();
 
-    // Send both tokens back to the client
     console.log("success");
-    const { password: userPass, ...farmerData } = foundUser.toObject(); // Convert Mongoose document to plain object and remove password
+    const { password: userPass, ...farmerData } = foundUser.toObject();
     const userImageBuffer = foundUser.userImage.toString("base64");
     const userImage = `data:image/png;base64,${userImageBuffer}`;
     const fullname = `${foundUser.firstname} ${foundUser.middlename} ${foundUser.surname} ${foundUser.extensionName}`;
@@ -204,7 +193,7 @@ const handleLogin = async (req, res) => {
       refreshToken,
       id: foundUser._id,
       userImage,
-    }); // Send back the data without password
+    });
   } catch (error) {
     console.error("Login Error: ", error);
     res.status(500).json({ message: "Internal server error" });

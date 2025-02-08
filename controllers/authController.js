@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../model/User");
 
 const handleLogin = async (req, res) => {
+  console.log("here")
   const { email, password } = req.body;
 
   if (!email || !password)
