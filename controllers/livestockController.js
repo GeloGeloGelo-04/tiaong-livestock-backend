@@ -391,14 +391,20 @@ const handleUpdateLivestock = async (req, res) => {
     }
 
     await foundUser.save();
-    await Livestock.create({
+    const response = await Livestock.create({
       farmerID: foundUser._id,
       barangay: foundUser.barangay,
       createdAt: new Date(),
-      [category === "Add Livestock" ? "livestock" : "mortality"]: {
-        [specificLivestock]: countInt,
+      livestock: {
+        [specificLivestock]: category === "Add Livestock" ? countInt : -Math.abs(countInt), // Make livestock negative if not "Add Livestock"
+      },
+      mortality: {
+        [specificLivestock]: category === "Add Livestock" ? 0 : Math.abs(countInt), // Mortality always positive if not "Add Livestock"
       },
     });
+
+
+    console.log(response)
 
     res.sendStatus(200);
   } catch (error) {
