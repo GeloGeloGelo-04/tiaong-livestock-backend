@@ -149,12 +149,12 @@ const handleLogin = async (req, res) => {
       emailVerified: true,
     });
 
-    if (!foundUser) {
-      foundUser = await Farmer.findOne({
-        email: referenceNo,
-        emailVerified: true,
-      });
-    }
+    // if (!foundUser) {
+    //   foundUser = await Farmer.findOne({
+    //     email: referenceNo,
+    //     emailVerified: true,
+    //   });
+    // }
     if (!foundUser) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
