@@ -7,7 +7,7 @@ const handleLogin = async (req, res) => {
   if (!referenceNo || !password) 
     return res.status(400).json({ message: "Reference No. and Password are required" });
 
-  const foundUser = await Student.findOne({ username: referenceNo }).exec();
+const foundUser = await Student.findOne({ referenceNo }).exec();
   if (!foundUser) 
     return res.status(401).json({ message: `Account with username '${referenceNo}' not found` });
 
