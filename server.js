@@ -30,7 +30,7 @@ connectDB()
     app.use("/auth", require("./routes/api/auth"));
     app.use("/refresh", require("./routes/api/refresh"));
     app.use("/logout", require("./routes/api/logout"));
-    app.use("/reset-password", require("./routes/api/resetPassword"));
+    app.use("/reset", require("./routes/api/resetPassword"));
     app.use("/users", require("./routes/api/users"));
 
     app.use("/farmers", require("./routes/api/farmers/farmers"));
