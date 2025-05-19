@@ -3,12 +3,13 @@ const {
   sendMail,
   updatePwd,
 } = require("../../controllers/resetPassController");
+
 const router = express.Router();
 
-// Ito ang endpoint na tinatawag sa mobile: /reset/send-code
+// Route para mag-send ng email code
 router.post("/send-code", sendMail);
 
-// Ito para sa pag-update ng password (e.g. PUT /reset)
+// Route para mag-update ng password
 router.put("/", updatePwd);
 
 module.exports = router;
