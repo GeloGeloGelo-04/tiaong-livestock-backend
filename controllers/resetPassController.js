@@ -23,11 +23,11 @@ const sendMail = async (req, res) => {
     foundUser.otp = verificationCode;
     const html = resetPassEmail(verificationCode);
 
-    foundUser.save();
+    await foundUser.save(); // ✅ wait until OTP is saved
 
     const transport = nodeMailer.createTransport({
       host: "smtp.gmail.com",
-      port: "587",
+      port: 587, // ✅ number, not string
       secure: false,
       auth: {
         user: "devjim.emailservice@gmail.com",
