@@ -8,7 +8,7 @@ const corsOption = {
             callback(new Error("Not allowed by CORS"))
         }
     },
-    optionSuccessStatus: 200
+    optionsSuccessStatus: 200 //dinagdagan ng s yung option
 }
 
 module.exports = corsOption
